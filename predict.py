@@ -79,7 +79,7 @@ def load_model():
 
 
 @torch.inference_mode()
-def predict(raw, model, stride=0.5, batch_size=16):
+def predict(raw, model, stride=0.5, batch_size=16, preprocessor=preprocess, threshold=None):
     source_rate = float(raw.info["sfreq"])
     if not math.isfinite(source_rate) or source_rate <= 90 or not source_rate.is_integer():
         raise ValueError("An integer sampling rate above 90 Hz is required.")
@@ -112,7 +112,7 @@ def predict(raw, model, stride=0.5, batch_size=16):
                 valid.append(len(rows) - 1)
                 batches.append(data)
         if batches:
-            processed, usable = preprocess(np.stack(batches), sfreq, return_valid=True)
+            processed, usable = preprocessor(np.stack(batches), sfreq, return_valid=True)
             for index, keep in zip(valid, usable):
                 if not keep:
                     rows[index][4] = "skipped_low_variance"
@@ -121,7 +121,7 @@ def predict(raw, model, stride=0.5, batch_size=16):
                 if not np.isfinite(scores).all():
                     raise ValueError("Model returned non-finite scores.")
                 for index, score in zip(np.array(valid)[usable], scores):
-                    rows[index][2:4] = [float(score), int(score >= CONFIG["threshold"])]
+                    rows[index][2:4] = [float(score), int(score >= (CONFIG["threshold"] if threshold is None else threshold))]
         yield from rows
 
 
@@ -131,6 +131,7 @@ def main():
     parser.add_argument("--output", type=Path, default=Path("predictions.csv"))
     parser.add_argument("--stride", type=float, default=0.5, help="Window step in seconds")
     parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--checkpoint", type=Path, help="Optional trained run directory (training dependencies required)")
     args = parser.parse_args()
     readers = {".edf": mne.io.read_raw_edf, ".bdf": mne.io.read_raw_bdf, ".vhdr": mne.io.read_raw_brainvision}
     try:
@@ -143,7 +144,23 @@ def main():
         raw = reader(str(args.input), preload=False, verbose="ERROR")
         temporary = None
         try:
-            rows = predict(raw, load_model(), args.stride, args.batch_size)
+            processor, threshold = preprocess, None
+            if args.checkpoint:
+                from train import load_trained
+                network, trained_config = load_trained(args.checkpoint)
+                threshold = trained_config["threshold"]
+                if trained_config["mode"].startswith("labram_"):
+                    from data import labram_preprocess
+
+                    def processor(x, rate, return_valid=False):
+                        if rate < 200:
+                            raise ValueError("LaBraM requires an integer sampling rate >=200 Hz.")
+                        _, usable = preprocess(x, rate, return_valid=True)
+                        processed = labram_preprocess(x, rate)
+                        return (processed, usable) if return_valid else processed
+            else:
+                network = load_model()
+            rows = predict(raw, network, args.stride, args.batch_size, processor, threshold)
             first = next(rows)  # Validate before creating output.
             with tempfile.NamedTemporaryFile(mode="w", newline="", dir=args.output.parent,
                                              prefix=f".{args.output.name}.", suffix=".tmp", delete=False) as handle:

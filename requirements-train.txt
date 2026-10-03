@@ -1,0 +1,6 @@
+-r requirements.txt
+braindecode[hub]==1.5.1
+torchaudio==2.8.0
+scikit-learn==1.7.2
+matplotlib==3.10.6
+pytest==8.4.2

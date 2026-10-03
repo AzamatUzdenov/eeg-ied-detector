@@ -1,6 +1,7 @@
 Architecture: SenuaLab/EEG-IED-Detection, copyright 2026 SenuaLab (MIT).
 Source commit: 150006a40d5fe44a7bbc67ab56b098521ce65ebd.
-Changes: retain only ResNet-Attention; add a minimal recording-to-CSV runner.
+Changes: retain ResNet-Attention; add recording-to-CSV inference, training,
+data preparation, comparison, evaluation and synthetic demonstration.
 Weights: SenuaLab ResNet-Attention, unchanged, CC BY 4.0:
 https://creativecommons.org/licenses/by/4.0/
 https://huggingface.co/SenuaLab/EEG-IED-Detection
@@ -9,3 +10,8 @@ Paper: An EEG dataset for interictal epileptiform discharge with spatial
 distribution information, Scientific Data 12, 229 (2025).
 https://doi.org/10.1038/s41597-025-04572-1
 No EEG recordings are included. Source and checksum are in config.json.
+LaBraM optional encoder: braindecode/labram-pretrained (BSD-3-Clause metadata),
+revision 0563b6c626e7b40d9a36653b763715db94d945d7; downloaded at runtime.
+Jiang, Zhao and Lu, ICLR 2024: https://arxiv.org/abs/2405.18765
+https://github.com/935963004/LaBraM (MIT); Braindecode (BSD-3-Clause).
+Added training, data preparation, comparison and evaluation code: MIT.
