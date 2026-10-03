@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.edf
+*.bdf
+*.vhdr
+*.vmrk
+*.eeg
+*.fif
+*.csv
+*.npz

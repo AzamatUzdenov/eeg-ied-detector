@@ -1,0 +1,32 @@
+{
+  "model": "SenuaLab ResNet-Attention",
+  "channels": [
+    "Fp1",
+    "Fp2",
+    "F3",
+    "F4",
+    "C3",
+    "C4",
+    "P3",
+    "P4",
+    "O1",
+    "O2",
+    "F7",
+    "F8",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "Fz",
+    "Cz",
+    "Pz"
+  ],
+  "sfreq": 250,
+  "window_seconds": 4.0,
+  "threshold": 0.6944227814674377,
+  "sha256": "971fa0d2b38f0cc76ca479931872ae957123aeb51263de59b11098be1531b1e1",
+  "source": "https://huggingface.co/SenuaLab/EEG-IED-Detection",
+  "revision": "22f30b1a9632c4b12fab323304401006f45f841a",
+  "source_code_commit": "150006a40d5fe44a7bbc67ab56b098521ce65ebd",
+  "weights_license": "CC-BY-4.0"
+}

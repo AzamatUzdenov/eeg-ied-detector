@@ -1,0 +1,11 @@
+Architecture: SenuaLab/EEG-IED-Detection, copyright 2026 SenuaLab (MIT).
+Source commit: 150006a40d5fe44a7bbc67ab56b098521ce65ebd.
+Changes: retain only ResNet-Attention; add a minimal recording-to-CSV runner.
+Weights: SenuaLab ResNet-Attention, unchanged, CC BY 4.0:
+https://creativecommons.org/licenses/by/4.0/
+https://huggingface.co/SenuaLab/EEG-IED-Detection
+Dataset: vEpiSet, Lin et al., https://doi.org/10.6084/m9.figshare.28069568 (CC BY 4.0).
+Paper: An EEG dataset for interictal epileptiform discharge with spatial
+distribution information, Scientific Data 12, 229 (2025).
+https://doi.org/10.1038/s41597-025-04572-1
+No EEG recordings are included. Source and checksum are in config.json.
