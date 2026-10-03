@@ -1,49 +1,51 @@
-# Обучение и сравнение
+# Usage
 
 ```bash
 pip install -r requirements-train.txt
 python prepare.py labels.csv --output dataset.npz --data-kind clinical
-python compare.py dataset.npz --output runs/comparison --epochs 20
-python train.py dataset.npz --model labram_finetune --output runs/labram --epochs 20
-python predict.py recording.edf --checkpoint runs/labram --output predictions.csv
+python train.py dataset.npz --output runs/trained --epochs 20
+python predict.py recording.edf --checkpoint runs/trained --output predictions.csv
 ```
 
-`labels.csv`: `recording,subject,start_seconds,label`. Пути относительно CSV;
-время от начала записи; метка 0/1 относится ко всему экспертно размеченному окну 4 с.
-Одна запись принадлежит одному пациенту. Нужны минимум 5 пациентов и оба класса
-в каждой части. Для подготовки/обучения нужны 19 каналов, единицы V, общий
-референс и одна целочисленная частота >=200 Гц. NPZ содержит `X`, `y`, `subject`,
-`sfreq`, `channels`, `units`, `data_kind`; загружается целиком в память.
+`labels.csv` header: `recording,subject,start_seconds,label`. Paths are relative
+to the CSV; time is measured from the start of the recording. Each expert label
+is 0 or 1 for a complete four-second window: 1 means IED present, 0 means IED absent.
+One recording belongs to one subject.
 
-Режимы: `resnet_scratch`, `resnet_finetune`, `labram_linear` (обучается только
-новый классификатор), `labram_finetune`. LaBraM автоматически скачивает исходные
-веса (~23 МБ) закреплённой версии. Полное состояние загружается строго;
-для окон 4 с сохраняются первые 4 временных параметра и явно задаются каналы.
-Это адаптация под бинарные окна 19 каналов, отдельная от исходного TUEV-протокола.
+Data preparation selects and orders the 19 channels listed in `config.json`.
+Input requires a common reference and one integer sampling rate >=200 Hz. T7/T8/P7/P8 aliases
+are accepted; bipolar or mixed-reference input is unsupported. MNE reads samples
+in volts. Bad, non-finite, flat and low-variance windows are skipped.
 
-Разбиение 60/20/20 по пациентам воспроизводится одним seed. Лучший checkpoint
-и режим выбираются по validation AP. Порог: максимальная специфичность при
-validation sensitivity >=0.8 (изменяется `--target-sensitivity`). Test не участвует
-в выборе. Интервалы 95% получаются повторной выборкой пациентов; они не учитывают
-неопределённость выбора порога и ненадёжны при малом числе пациентов.
+The NPZ contains `X`, `y`, `subject`, `sfreq`, `channels`, `units` and `data_kind`.
+`X` has shape `(windows,19,4*sfreq)` and `units` must be `V`.
+The complete dataset and processed windows are loaded into memory.
+At least five subjects are required, with both labels in every split.
 
-Результат: веса `safetensors`, настройки, история, агрегированные метрики,
-ROC/PR/confusion PNG. Локальные CSV содержат ID пациентов, не публикуйте их.
-`runs/`, NPZ, CSV и записи исключены из Git. Выходы не перезаписываются.
+Patient-separated train/validation/test splits use approximately 60/20/20 of
+subjects and a fixed seed. Checkpoints are selected by validation average
+precision. The threshold maximizes specificity at validation sensitivity >=0.8
+(`--target-sensitivity`). Test data is evaluated after selection.
 
-Разделение по пациентам защищает от смешивания частей текущего обучения.
-Пересечение с предварительным обучением Senua (vEpiSet) или LaBraM нужно
-проверять отдельно. По умолчанию оно неизвестно; `--pretraining-overlap` лишь
-сохраняет оценку пользователя, независимой проверки не выполняет.
-Сравниваются подходы со своей обработкой и разным предварительным обучением.
-Общие гиперпараметры задают одинаковый бюджет, оптимальная настройка каждого подхода не выполнена.
+Runs save weights, configuration, history, local prediction CSVs, aggregate
+metrics and ROC/PR/confusion plots. Confidence intervals resample whole patients;
+they condition on the selected threshold and omit selection uncertainty.
+Intervals from small patient samples are unreliable.
+
+Patient separation applies to the current training split. Prior pretraining
+overlap requires a separate audit; `--pretraining-overlap` only records the user's
+assessment. Pretrained sources and transfer settings are recorded in run metadata.
+Metrics describe windows and do not locate individual events or measure false events per hour.
+
+Local CSVs and preparation manifests contain subject IDs and recording paths.
+`runs/`, datasets and recordings are excluded from Git. Review aggregate outputs
+before publishing. Existing outputs are never overwritten.
 
 ```bash
-python demo.py --model resnet_scratch --epochs 2
-python demo.py --model labram_linear --output runs/demo-labram --epochs 2
+python demo.py --output runs/demo --epochs 2
 python -m pytest -q
 ```
 
-Демонстрация и тесты используют искусственные сигналы. Их результаты подтверждают
-работоспособность кода, клиническую точность не устанавливают. Метрики относятся
-к окнам, не к отдельным разрядам, приступам или числу ложных событий в час.
+The demo and tests use synthetic signals. They verify execution, not clinical
+performance. Additional options are listed with `--help`; optional components
+download pinned weights on first use.

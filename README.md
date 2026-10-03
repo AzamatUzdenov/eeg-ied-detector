@@ -1,6 +1,8 @@
-# EEG IED detector
+# EEG IED Detector
 
-Готовая SenuaLab ResNet-Attention для поиска окон ЭЭГ с возможными эпилептиформными разрядами. Исходные веса включены (~20 МБ).
+This public research toolkit accompanies an EEG analysis project completed at Hadassah Medical Center in spring 2026.
+
+Detect candidate interictal epileptiform discharge (IED) windows in EEG recordings. A released checkpoint is included (~20 MB).
 
 ```bash
 python3 -m venv .venv
@@ -9,16 +11,10 @@ pip install -r requirements.txt
 python predict.py recording.edf --output predictions.csv
 ```
 
-Python 3.11+. Вход: EDF/BDF или BrainVision `.vhdr`, 19 каналов из `config.json`, общий референс (биполярный монтаж не поддерживается). Допустимы T7/T8/P7/P8. Окна 4 с, шаг 0.5 с; CSV содержит оценку и статус. Плохие/нечисловые/плоские окна пропускаются. Это кандидаты для просмотра, точное время разряда не определяется.
+Python 3.11+. EDF, BDF or BrainVision `.vhdr` input; 19 channels with a common reference. Four-second windows, 0.5-second step. Output: window scores and quality status.
 
-Дополнительно: подготовка экспертной разметки, обучение ResNet и LaBraM, сравнение с разделением по пациентам, выбор порога по validation, метрики с интервалами и графиками. [Команды и формат данных](USAGE.md), [проверенный синтетический пример](examples/synthetic).
+[Usage](USAGE.md) covers data preparation, training and evaluation. [Example outputs](examples/synthetic) use synthetic signals.
 
-```bash
-pip install -r requirements-train.txt
-python demo.py --model labram_linear --epochs 2
-python -m pytest -q -m "not integration"
-```
+Research use only. Outputs require expert review; the public toolkit has not undergone independent clinical validation.
 
-Исследовательская модель, независимая клиническая проверка не проведена. Нужен просмотр специалистом. Результаты авторов на vEpiSet (13 участников): AUROC 0.900, F1 0.667, чувствительность 0.608, специфичность 0.973. Диагноз и приступы не определяет.
-
-Источник: [SenuaLab](https://github.com/SenuaLab/EEG-IED-Detection), [веса](https://huggingface.co/SenuaLab/EEG-IED-Detection). Код MIT, веса CC BY 4.0, атрибуция в `NOTICE`.
+Code: MIT. Included weights: CC BY 4.0. Sources and attribution: [NOTICE](NOTICE).

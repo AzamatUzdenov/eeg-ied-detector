@@ -1,5 +1,5 @@
 {
-  "model": "SenuaLab ResNet-Attention",
+  "model": "EEG IED window detector",
   "channels": [
     "Fp1",
     "Fp2",
